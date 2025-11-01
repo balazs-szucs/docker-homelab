@@ -1,0 +1,63 @@
+# media.yml
+
+services:
+  jellyfin:
+    image: lscr.io/linuxserver/jellyfin:latest
+    container_name: jellyfin
+    restart: unless-stopped
+    networks: [ proxy ]
+    volumes:
+      - ./docker/jellyfin/config:/config
+      - ./docker/jellyfin/cache:/cache
+      - ./docker/media/tv:/data/tvshows
+      - ./docker/media/movies:/data/movies
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.jellyfin-secure.rule=Host(`jellyfin.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.jellyfin-secure.entrypoints=https"
+      - "traefik.http.routers.jellyfin-secure.tls=true"
+      - "traefik.http.services.jellyfin.loadbalancer.server.port=8096"
+
+  kavita:
+    image: lscr.io/linuxserver/kavita:latest
+    container_name: kavita
+    restart: unless-stopped
+    networks: [ proxy ]
+    volumes:
+      - ./docker/kavita/config:/config
+      - ./docker/media/books:/book
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.kavita-secure.rule=Host(`kavita.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.kavita-secure.entrypoints=https"
+      - "traefik.http.routers.kavita-secure.tls=true"
+      - "traefik.http.services.kavita.loadbalancer.server.port=5000"
+      - "traefik.http.routers.kavita-secure.middlewares=authelia@docker"
+
+  komga:
+    image: gotson/komga:latest
+    container_name: komga
+    restart: unless-stopped
+    networks: [ proxy ]
+    volumes:
+      - ./docker/komga/config:/config
+      - ./docker/media/comics:/data
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.komga-secure.rule=Host(`komga.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.komga-secure.entrypoints=https"
+      - "traefik.http.routers.komga-secure.tls=true"
+      - "traefik.http.services.komga.loadbalancer.server.port=25600"
+      - "traefik.http.routers.komga-secure.middlewares=authelia@docker"

@@ -1,0 +1,87 @@
+# utils.yml
+
+services:
+  dozzle:
+    image: amir20/dozzle:latest
+    container_name: dozzle
+    restart: unless-stopped
+    networks: [ proxy ]
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dozzle-secure.rule=Host(`dozzle.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.dozzle-secure.entrypoints=https"
+      - "traefik.http.routers.dozzle-secure.tls=true"
+      - "traefik.http.services.dozzle.loadbalancer.server.port=8080"
+      - "traefik.http.routers.dozzle-secure.middlewares=authelia@docker"
+
+  homepage:
+    image: ghcr.io/gethomepage/homepage:latest
+    container_name: homepage
+    restart: unless-stopped
+    networks: [ proxy ]
+    volumes:
+      - ./docker/homepage/config:/app/config
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - homepage-next-cache:/app/.next
+    environment:
+      - PUID=${PUID}
+      - PGID=999
+      - TZ=${TZ}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.homepage-secure.rule=Host(`homepage.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.homepage-secure.entrypoints=https"
+      - "traefik.http.routers.homepage-secure.tls=true"
+      - "traefik.http.services.homepage.loadbalancer.server.port=3000"
+      - "traefik.http.routers.homepage-secure.middlewares=authelia@docker"
+
+  uptime-kuma:
+    image: louislam/uptime-kuma:latest
+    container_name: uptime-kuma
+    restart: unless-stopped
+    networks: [ proxy ]
+    volumes:
+      - ./docker/uptime-kuma/data:/app/data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.uptime-kuma-secure.rule=Host(`uptime.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.uptime-kuma-secure.entrypoints=https"
+      - "traefik.http.routers.uptime-kuma-secure.tls=true"
+      - "traefik.http.services.uptime-kuma.loadbalancer.server.port=3001"
+      - "traefik.http.routers.uptime-kuma-secure.middlewares=authelia@docker"
+
+  stirling-pdf:
+    image: stirlingtools/stirling-pdf:latest
+    container_name: stirling-pdf
+    restart: unless-stopped
+    networks: [ proxy ]
+    volumes:
+      - ./docker/stirling/config:/usr/share/tessdata
+    environment:
+      - DOCKER_ENABLE_SECURITY=false
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.stirling-pdf-secure.rule=Host(`stirling.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.stirling-pdf-secure.entrypoints=https"
+      - "traefik.http.routers.stirling-pdf-secure.tls=true"
+      - "traefik.http.services.stirling-pdf.loadbalancer.server.port=8080"
+      - "traefik.http.routers.stirling-pdf-secure.middlewares=authelia@docker"
+
+  pingvin-share:
+    image: stonith404/pingvin-share:latest
+    container_name: pingvin-share
+    restart: unless-stopped
+    networks: [ proxy ]
+    volumes:
+      - ./docker/pingvin/config:/opt/app/backend/data
+      - ./docker/pingvin/images:/opt/app/frontend/public/img
+    environment:
+      - TRUST_PROXY=true
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.pingvin-secure.rule=Host(`pingvin.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.pingvin-secure.entrypoints=https"
+      - "traefik.http.routers.pingvin-secure.tls=true"
+      - "traefik.http.services.pingvin.loadbalancer.server.port=3000"

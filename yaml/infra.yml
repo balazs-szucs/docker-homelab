@@ -1,0 +1,23 @@
+# infra.yml
+
+services:
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower
+    restart: unless-stopped
+    networks: [ proxy ]
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_SCHEDULE=0 0 3 * * *
+      - WATCHTOWER_NOTIFICATIONS_HOSTNAME=${DOMAIN_NAME}
+
+  redis:
+    image: redis:alpine
+    container_name: redis
+    restart: unless-stopped
+    networks: [ proxy ]
+    volumes:
+      - ./docker/redis:/data
+    expose: [ "6379" ]
